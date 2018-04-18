@@ -9,10 +9,8 @@
 
 namespace Nextras\Datagrid;
 
-use Nette;
 
-
-class Column extends Nette\Object
+class Column extends SmartObject
 {
 	/** @var string */
 	public $name;

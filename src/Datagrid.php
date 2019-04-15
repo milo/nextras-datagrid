@@ -11,6 +11,7 @@ namespace Nextras\Datagrid;
 
 use Nette\Application\UI;
 use Nette\Bridges\ApplicationLatte\Template;
+use Nette\ComponentModel\IComponent;
 use Nette\Forms\Container;
 use Nette\Forms\Controls\Button;
 use Nette\Utils\Html;
@@ -389,7 +390,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function redrawControl($snippet = null, $redraw = true)
+	public function redrawControl(?string $snippet = null, bool $redraw = true): void
 	{
 		parent::redrawControl($snippet, $redraw);
 		if ($snippet === null || $snippet === 'rows') {
@@ -409,7 +410,7 @@ class Datagrid extends UI\Control
 	/*******************************************************************************/
 
 
-	protected function attached($presenter)
+	protected function attached(IComponent $presenter): void
 	{
 		parent::attached($presenter);
 		$this->filterDataSource = $this->filter;
@@ -555,7 +556,7 @@ class Datagrid extends UI\Control
 				$form['filter']->addSubmit('filter', 'Filter')->setValidationScope($form['filter']->getControls());
 			}
 			if (!isset($form['filter']['cancel'])) {
-				$form['filter']->addSubmit('cancel', 'Cancel')->setValidationScope(false);
+				$form['filter']->addSubmit('cancel', 'Cancel')->setValidationScope([]);
 			}
 
 			$this->prepareFilterDefaults($form['filter']);
@@ -578,7 +579,7 @@ class Datagrid extends UI\Control
 				$form['edit']->addSubmit('save', 'Save')->setValidationScope($form['edit']->getControls());
 			}
 			if (!isset($form['edit']['cancel'])) {
-				$form['edit']->addSubmit('cancel', 'Cancel')->setValidationScope(false);
+				$form['edit']->addSubmit('cancel', 'Cancel')->setValidationScope([]);
 			}
 			if (!isset($form['edit'][$this->rowPrimaryKey])) {
 				$form['edit']->addHidden($this->rowPrimaryKey);
@@ -596,12 +597,12 @@ class Datagrid extends UI\Control
 
 			if (count($actions) === 1) {
 				$form['actions']->addHidden('action', key($actions));
-				$form['actions']->addSubmit('process', current($actions))->setValidationScope(false);
+				$form['actions']->addSubmit('process', current($actions))->setValidationScope([]);
 
 			} else {
 				$form['actions']->addSelect('action', 'Action', $actions)
 					->setPrompt('- select action -');
-				$form['actions']->addSubmit('process', 'Do')->setValidationScope(false);
+				$form['actions']->addSubmit('process', 'Do')->setValidationScope([]);
 			}
 		}
 
@@ -689,7 +690,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function loadState(array $params)
+	public function loadState(array $params): void
 	{
 		parent::loadState($params);
 		if ($this->paginator) {
@@ -698,9 +699,9 @@ class Datagrid extends UI\Control
 	}
 
 
-	protected function createTemplate($class = null)
+	protected function createTemplate(): UI\ITemplate
 	{
-		$template = parent::createTemplate($class);
+		$template = parent::createTemplate();
 		if ($translator = $this->getTranslator()) {
 			$template->setTranslator($translator);
 		}

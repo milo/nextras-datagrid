@@ -649,7 +649,7 @@ class Datagrid extends UI\Control
 
 		if (isset($form['filter'])) {
 			if ($form['filter']['filter']->isSubmittedBy()) {
-				$values = $form['filter']->getValues(true);
+				$values = $form['filter']->getUnsafeValues('array');
 				unset($values['filter']);
 				$values = $this->filterFormFilter($values);
 				if ($this->paginator) {

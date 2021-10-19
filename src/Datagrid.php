@@ -434,7 +434,7 @@ class Datagrid extends UI\Control
 			if ($this->filterFormFactory) {
 				$this['form']->isValid(); // triggers validation
 				foreach ($this['form']['filter']->getControls() as $name => $control) {
-					if ($control->getErrors() === []) {
+					if ($control->getErrors() === [] && !$control->isOmitted()) {
 						$validFilterData[$name] = $control->getValue();
 					}
 				}
@@ -650,7 +650,6 @@ class Datagrid extends UI\Control
 		if (isset($form['filter'])) {
 			if ($form['filter']['filter']->isSubmittedBy()) {
 				$values = $form['filter']->getUnsafeValues('array');
-				unset($values['filter']);
 				$values = $this->filterFormFilter($values);
 				if ($this->paginator) {
 					$this->page = $this->paginator->page = 1;

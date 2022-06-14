@@ -166,6 +166,8 @@
 				<td class="grid-col-{$column->name}">
 					{ifset #cell-{$column->name}}
 						{include #"cell-{$column->name}" row => $row, cell => $cell, iterator => $iterator}
+					{elseif $cell instanceof \BackedEnum}
+						{$cell->value}
 					{else}
 						{$cell}
 					{/ifset}

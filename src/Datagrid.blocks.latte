@@ -128,6 +128,9 @@
 	<td class="grid-col-actions" n:formContainer="insert">{include #row-insert-button form => $form}</td>
 {/define}
 
+{define cell-global-action}
+	{input items:$primary}
+{/define}
 
 {define row}
 	<tr id={$rowId}>
@@ -143,7 +146,7 @@
 	{ifset $form[actions]}
 		<td class="grid-col-global-actions">
 			{formContainer actions}
-			{input items:$primary}
+				{include #cell-global-action primary => $primary, row => $row}
 			{/formContainer}
 		</td>
 	{/ifset}

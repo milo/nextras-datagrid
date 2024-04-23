@@ -9,113 +9,72 @@
 
 namespace Nextras\Datagrid;
 
+use Nette\Application\Attributes\Persistent;
 use Nette\Application\UI;
+use Nette\Bridges\ApplicationLatte\DefaultTemplate;
 use Nette\Bridges\ApplicationLatte\Template;
-use Nette\ComponentModel\IComponent;
+use Nette\ComponentModel\IContainer;
 use Nette\Forms\Container;
 use Nette\Forms\Controls\Button;
 use Nette\Utils\Html;
 use Nette\Utils\Paginator;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
 
 
+/**
+ * @property-read DefaultTemplate $template
+ */
 class Datagrid extends UI\Control
 {
-	/** @var string */
-	const ORDER_ASC = 'asc';
-
-	/** @var string */
-	const ORDER_DESC = 'desc';
-
+	const string ORDER_ASC = 'asc';
+	const string ORDER_DESC = 'desc';
 	/** @var array of callbacks: function(Datagrid) */
-	public $onRender = [];
-
-	/** @persistent */
-	public $filter = [];
-
-	/** @persistent */
+	public array $onRender = [];
+	#[Persistent]
+	public array $filter = [];
+	#[Persistent]
 	public $orderColumn;
-
-	/** @persistent */
+	#[Persistent]
 	public $orderType = self::ORDER_ASC;
-
-	/** @persistent */
+	#[Persistent]
 	public $page = 1;
-
-	/** @var string|null */
-	protected $anchor;
-
-	/** @var array */
-	protected $filterDataSource = [];
-
-	/** @var array */
-	protected $columns = [];
-
+	protected ?string $anchor = null;
+	protected array $filterDataSource = [];
+	protected array $columns = [];
 	/** @var callable|null */
 	protected $columnGetterCallback;
-
 	/** @var callable */
 	protected $dataSourceCallback;
-
 	/** @var callable|null */
 	protected $formFactory;
-
 	/** @var callable|null */
 	protected $insertFormFactory;
-
 	/** @var callable|null */
 	protected $insertFormCallback;
-
 	/** @var callable|null */
 	protected $editFormFactory;
-
 	/** @var callable|null */
 	protected $editFormCallback;
-
 	/** @var callable|null */
 	protected $deleteCallback;
 
 	/** @var callable|null */
 	protected $filterFormFactory;
-
-	/** @var array */
-	protected $filterDefaults;
-
-	/** @var array */
-	protected $globalActions = [];
-
-	/** @var Paginator */
-	protected $paginator;
-
-	/** @var ITranslator|null */
-	protected $translator;
-
+	protected ?array $filterDefaults = null;
+	protected array $globalActions = [];
+	protected ?Paginator $paginator = null;
+	/** @var Translator|null */
+	protected ?Translator $translator = null;
 	/** @var callable|null */
 	protected $paginatorItemsCountCallback;
-
-	/** @var mixed */
-	protected $editRowKey;
-
-	/** @var string */
-	protected $rowPrimaryKey;
-
-	/** @var mixed */
-	protected $data;
-
-	/** @var bool */
-	protected $sendOnlyRowParentSnippet = false;
-
-	/** @var array */
-	protected $cellsTemplates = [];
+	protected mixed $editRowKey = null;
+	protected ?string $rowPrimaryKey = null;
+	protected mixed $data = null;
+	protected bool $sendOnlyRowParentSnippet = false;
+	protected array $cellsTemplates = [];
 
 
-	/**
-	 * Adds column
-	 * @param  string
-	 * @param  string
-	 * @return Column
-	 */
-	public function addColumn($name, $label = null)
+	public function addColumn(string $name, string $label = null): Column
 	{
 		if (!$this->rowPrimaryKey) {
 			$this->rowPrimaryKey = $name;
@@ -126,11 +85,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	/**
-	 * @param  string $name
-	 * @return Column
-	 */
-	public function getColumn($name)
+	public function getColumn(string $name): Column
 	{
 		if (!isset($this->columns[$name])) {
 			throw new \InvalidArgumentException("Unknown column $name.");
@@ -273,13 +228,13 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function addGlobalAction($name, $label, callable $action)
+	public function addGlobalAction(string $name, string $label, callable $action): void
 	{
 		$this->globalActions[$name] = [$label, $action];
 	}
 
 
-	public function setPagination($itemsPerPage, callable $itemsCountCallback = null)
+	public function setPagination(int|bool $itemsPerPage, callable $itemsCountCallback = null): void
 	{
 		if ($itemsPerPage === false) {
 			$this->paginator = null;
@@ -296,11 +251,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	/**
-	 * @param string|Template $path
-	 * @param bool $append
-	 */
-	public function addCellsTemplate($path, $append = true)
+	public function addCellsTemplate(Template|string $path, bool $append = true): void
 	{
 		if ($path instanceof Template) {
 			$path = $path->getFile();
@@ -317,7 +268,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function getCellsTemplates()
+	public function getCellsTemplates(): array
 	{
 		$templates = $this->cellsTemplates;
 		$templates[] = __DIR__ . '/Datagrid.blocks.latte';
@@ -325,13 +276,13 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setTranslator(ITranslator $translator = null)
+	public function setTranslator(Translator $translator = null): void
 	{
 		$this->translator = $translator;
 	}
 
 
-	public function getTranslator()
+	public function getTranslator(): ?Translator
 	{
 		return $this->translator;
 	}
@@ -349,21 +300,24 @@ class Datagrid extends UI\Control
 	/*******************************************************************************/
 
 
-	public function render()
+	public function render(): void
 	{
 		if ($this->filterFormFactory) {
 			$this['form']['filter']->setDefaults($this->filter);
 		}
 
-		$this->template->form = $this['form'];
-		$this->template->data = $this->getData();
-		$this->template->columns = $this->columns;
-		$this->template->editRowKey = $this->editRowKey;
-		$this->template->rowPrimaryKey = $this->rowPrimaryKey;
-		$this->template->paginator = $this->paginator;
-		$this->template->sendOnlyRowParentSnippet = $this->sendOnlyRowParentSnippet;
-		$this->template->cellsTemplates = $this->getCellsTemplates();
-		$this->template->showFilterCancel = $this->filterDataSource != $this->filterDefaults; // @ intentionaly
+		$this->template->setParameters([
+			'form' => $this['form'],
+			'data' => $this->getData(),
+			'columns' => $this->columns,
+			'editRowKey' => $this->editRowKey,
+			'rowPrimaryKey' => $this->rowPrimaryKey,
+			'paginator' => $this->paginator,
+			'sendOnlyRowParentSnippet' => $this->sendOnlyRowParentSnippet,
+			'cellsTemplates' => $this->getCellsTemplates(),
+			'showFilterCancel' => $this->filterDataSource != $this->filterDefaults, // @ intentional
+		]);
+
 		$this->template->setFile(__DIR__ . '/Datagrid.latte');
 
 		$this->onRender($this);
@@ -371,7 +325,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function redrawRow($primaryValue)
+	public function redrawRow($primaryValue): void
 	{
 		if ($this->presenter->isAjax()) {
 			if (isset($this->filterDataSource[$this->rowPrimaryKey])) {
@@ -399,25 +353,17 @@ class Datagrid extends UI\Control
 	}
 
 
-	/** @deprecated */
-	function invalidateRow($primaryValue)
-	{
-		trigger_error(__METHOD__ . '() is deprecated; use $this->redrawRow($primaryValue) instead.', E_USER_DEPRECATED);
-		$this->redrawRow($primaryValue);
-	}
-
-
 	/*******************************************************************************/
-
-
-	protected function attached(IComponent $presenter): void
+	protected function validateParent(IContainer $parent): void
 	{
-		parent::attached($presenter);
-		$this->filterDataSource = $this->filter;
+		parent::validateParent($parent);
+		$this->monitor(UI\Presenter::class, function () {
+			$this->filterDataSource = $this->filter;
+		});
 	}
 
 
-	protected function getData($key = null)
+	protected function getData($key = null): mixed
 	{
 		if (!$this->data) {
 			if ($this->dataSourceCallback === null) {
@@ -426,8 +372,8 @@ class Datagrid extends UI\Control
 
 			$onlyRow = $key !== null && $this->presenter->isAjax();
 
-			if ($this->orderColumn !== NULL && !isset($this->columns[$this->orderColumn])) {
-				$this->orderColumn = NULL;
+			if ($this->orderColumn !== null && !isset($this->columns[$this->orderColumn])) {
+				$this->orderColumn = null;
 			}
 
 			$validFilterData = [];
@@ -502,7 +448,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function handleEdit($primaryValue, $cancelEditPrimaryValue = null)
+	public function handleEdit($primaryValue, $cancelEditPrimaryValue = null): void
 	{
 		$this->editRowKey = $primaryValue;
 		if ($this->presenter->isAjax()) {
@@ -516,7 +462,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function handleDelete($primaryValue)
+	public function handleDelete($primaryValue): void
 	{
 		call_user_func($this->deleteCallback, $primaryValue);
 		if ($this->presenter->isAjax()) {
@@ -525,7 +471,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function handleSort()
+	public function handleSort(): void
 	{
 		if ($this->presenter->isAjax()) {
 			$this->redrawControl('rows');
@@ -533,7 +479,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function createComponentForm()
+	public function createComponentForm(): UI\Form
 	{
 		$form = $this->formFactory === null
 			? new UI\Form
@@ -616,7 +562,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function processForm(UI\Form $form)
+	public function processForm(UI\Form $form): void
 	{
 		$allowRedirect = true;
 		if (isset($form['insert']) && $form['insert']['button']->isSubmittedBy()) {
@@ -649,7 +595,7 @@ class Datagrid extends UI\Control
 
 		if (isset($form['filter'])) {
 			if ($form['filter']['filter']->isSubmittedBy()) {
-				$values = $form['filter']->getUnsafeValues('array');
+				$values = $form['filter']->getUntrustedValues('array');
 				$values = $this->filterFormFilter($values);
 				if ($this->paginator) {
 					$this->page = $this->paginator->page = 1;
@@ -698,9 +644,9 @@ class Datagrid extends UI\Control
 	}
 
 
-	protected function createTemplate(): UI\ITemplate
+	protected function createTemplate(?string $class = null): UI\Template
 	{
-		$template = parent::createTemplate();
+		$template = parent::createTemplate($class);
 		if ($translator = $this->getTranslator()) {
 			$template->setTranslator($translator);
 		}
@@ -708,7 +654,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function handlePaginate()
+	public function handlePaginate(): void
 	{
 		if ($this->presenter->isAjax()) {
 			$this->redrawControl('rows');
@@ -716,7 +662,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	private function prepareFilterDefaults(Container $container)
+	private function prepareFilterDefaults(Container $container): void
 	{
 		$this->filterDefaults = [];
 		foreach ($container->controls as $name => $control) {
@@ -732,7 +678,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	private function filterFormFilter(array $values)
+	private function filterFormFilter(array $values): array
 	{
 		$filtered = [];
 		foreach ($values as $key => $value) {
@@ -745,8 +691,8 @@ class Datagrid extends UI\Control
 	}
 
 
-	private static function isEmptyValue($value)
+	private static function isEmptyValue($value): bool
 	{
-		return $value === NULL || $value === '' || $value === [] || $value === false;
+		return $value === null || $value === '' || $value === [] || $value === false;
 	}
 }

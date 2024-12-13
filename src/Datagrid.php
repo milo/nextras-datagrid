@@ -75,7 +75,7 @@ class Datagrid extends UI\Control
 	protected array $cellsTemplates = [];
 
 
-	public function addColumn(string $name, ?string $label = null): Column
+	public function addColumn(string $name, string|Html|null $label = null): Column
 	{
 		if (!$this->rowPrimaryKey) {
 			$this->rowPrimaryKey = $name;

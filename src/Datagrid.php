@@ -16,6 +16,7 @@ use Nette\Bridges\ApplicationLatte\Template;
 use Nette\ComponentModel\IContainer;
 use Nette\Forms\Container;
 use Nette\Forms\Controls\Button;
+use Nette\Utils\Arrays;
 use Nette\Utils\Html;
 use Nette\Utils\Paginator;
 use Nette\Localization\Translator;
@@ -74,7 +75,7 @@ class Datagrid extends UI\Control
 	protected array $cellsTemplates = [];
 
 
-	public function addColumn(string $name, string $label = null): Column
+	public function addColumn(string $name, ?string $label = null): Column
 	{
 		if (!$this->rowPrimaryKey) {
 			$this->rowPrimaryKey = $name;
@@ -120,7 +121,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setColumnGetterCallback(callable $getterCallback = null)
+	public function setColumnGetterCallback(?callable $getterCallback = null)
 	{
 		$this->columnGetterCallback = $getterCallback;
 	}
@@ -156,7 +157,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setEditFormFactory(callable $editFormFactory = null)
+	public function setEditFormFactory(?callable $editFormFactory = null)
 	{
 		$this->editFormFactory = $editFormFactory;
 	}
@@ -168,7 +169,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setEditFormCallback(callable $editFormCallback = null)
+	public function setEditFormCallback(?callable $editFormCallback = null)
 	{
 		$this->editFormCallback = $editFormCallback;
 	}
@@ -180,7 +181,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setInsertFormFactory(callable $insertFormFactory = null)
+	public function setInsertFormFactory(?callable $insertFormFactory = null)
 	{
 		$this->insertFormFactory = $insertFormFactory;
 	}
@@ -192,7 +193,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setInsertFormCallback(callable $insertFormCallback = null)
+	public function setInsertFormCallback(?callable $insertFormCallback = null)
 	{
 		$this->insertFormCallback = $insertFormCallback;
 	}
@@ -204,7 +205,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setFilterFormFactory(callable $filterFormFactory = null)
+	public function setFilterFormFactory(?callable $filterFormFactory = null)
 	{
 		$this->filterFormFactory = $filterFormFactory;
 	}
@@ -216,7 +217,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setDeleteCallback(callable $callback = null)
+	public function setDeleteCallback(?callable $callback = null)
 	{
 		$this->deleteCallback = $callback;
 	}
@@ -234,7 +235,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setPagination(int|bool $itemsPerPage, callable $itemsCountCallback = null): void
+	public function setPagination(int|bool $itemsPerPage, ?callable $itemsCountCallback = null): void
 	{
 		if ($itemsPerPage === false) {
 			$this->paginator = null;
@@ -257,7 +258,7 @@ class Datagrid extends UI\Control
 			$path = $path->getFile();
 		}
 		if (!file_exists($path)) {
-			throw new \InvalidArgumentException("Template '{$path}' does not exist.");
+			throw new \InvalidArgumentException("Template '$path' does not exist.");
 		}
 
 		if ($append) {
@@ -276,7 +277,7 @@ class Datagrid extends UI\Control
 	}
 
 
-	public function setTranslator(Translator $translator = null): void
+	public function setTranslator(?Translator $translator = null): void
 	{
 		$this->translator = $translator;
 	}
@@ -320,7 +321,7 @@ class Datagrid extends UI\Control
 
 		$this->template->setFile(__DIR__ . '/Datagrid.latte');
 
-		$this->onRender($this);
+		Arrays::invoke($this->onRender, $this);
 		$this->template->render();
 	}
 
@@ -437,7 +438,7 @@ class Datagrid extends UI\Control
 				}
 
 				if ($need) {
-					throw new \InvalidArgumentException("Result row does not have '{$column}' column.");
+					throw new \InvalidArgumentException("Result row does not have '$column' column.");
 				} else {
 					return null;
 				}
@@ -620,7 +621,7 @@ class Datagrid extends UI\Control
 					foreach($this->getData() as $row) {
 						$rows[] = $this->getter($row, $this->rowPrimaryKey);
 					}
-					$ids = array_intersect($rows, $form->getHttpData($form::DATA_TEXT, 'actions[items][]'));
+					$ids = array_intersect($rows, $form->getHttpData($form::DataText, 'actions[items][]'));
 					$callback = $this->globalActions[$action][1];
 					$callback($ids, $this);
 					$this->data = null;
